@@ -1,0 +1,75 @@
+{
+  "resume": "Sara Benali obtient 71.3/100 pour le poste de Développeur Python. Techniquement le profil est intéressant, mais deux incohérences ont été détectées entre les documents.",
+  "score_global": 71.3,
+  "points_forts": [
+    "4 compétences obligatoires sur 5 maîtrisées : Python, SQL, FastAPI, Git",
+    "3 ans d'expérience en développement Python, conforme au minimum demandé",
+    "Français et Anglais B2 conformes aux langues demandées"
+  ],
+  "points_manquants": [
+    "Docker (compétence obligatoire) non identifié dans le CV",
+    "Celery et AWS (compétences souhaitées) non identifiés",
+    "Le diplôme fourni (Licence, Bac+3) est inférieur au Bac+5 exigé"
+  ],
+  "incoherences": [
+    {
+      "type": "identite",
+      "description": "Le prénom est « Sara » sur le CV mais « Sarah » sur la CIN.",
+      "gravite": "faible",
+      "documents": [
+        "cv",
+        "cin"
+      ]
+    },
+    {
+      "type": "diplome",
+      "description": "Le CV indique « Master (Informatique) » mais le diplôme fourni est « Licence (Informatique) ».",
+      "gravite": "elevee",
+      "documents": [
+        "cv",
+        "diplome"
+      ]
+    }
+  ],
+  "justification_score": [
+    {
+      "critere": "competences_obligatoires",
+      "ponderation": 40.0,
+      "score": 80.0,
+      "justification": "4 compétences obligatoires sur 5 identifiées (Python, SQL, FastAPI, Git) ; Docker est manquant."
+    },
+    {
+      "critere": "experience",
+      "ponderation": 20.0,
+      "score": 100.0,
+      "justification": "3 ans d'expérience pour 3 ans demandés : critère atteint."
+    },
+    {
+      "critere": "diplome_formation",
+      "ponderation": 15.0,
+      "score": 40.0,
+      "justification": "Le diplôme fourni est une Licence (Bac+3) : inférieur au Bac+5 demandé, malgré le Master déclaré dans le CV."
+    },
+    {
+      "critere": "competences_souhaitees",
+      "ponderation": 10.0,
+      "score": 33.3,
+      "justification": "1 compétence souhaitée sur 3 identifiée (PostgreSQL) ; Celery et AWS manquants."
+    },
+    {
+      "critere": "langues",
+      "ponderation": 5.0,
+      "score": 100.0,
+      "justification": "Français et Anglais B2 : conformes aux langues demandées."
+    },
+    {
+      "critere": "coherence_documents",
+      "ponderation": 10.0,
+      "score": 50.0,
+      "justification": "2 incohérences détectées entre les documents (score de cohérence 50)."
+    }
+  ],
+  "conclusion": "Le diplôme déclaré ne correspond pas au diplôme fourni. Une vérification manuelle des documents est recommandée avant toute décision.",
+  "avis_indicatif": "a_etudier",
+  "decision_finale": "La décision finale appartient au responsable du recrutement."
+}

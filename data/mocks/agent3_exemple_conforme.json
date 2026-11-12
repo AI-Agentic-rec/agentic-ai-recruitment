@@ -1,0 +1,27 @@
+{
+  "infos_diplome": {
+    "nom": "Benali",
+    "prenom": "Sara",
+    "diplome": "Master",
+    "specialite": "Informatique",
+    "etablissement": "Université Ibn Zohr",
+    "date_obtention": "2021"
+  },
+  "infos_cin": {
+    "nom": "Benali",
+    "prenom": "Sara",
+    "date_naissance": "1998-04-12",
+    "numero_cin": "AB123456"
+  },
+  "documents_analyses": [
+    "cv",
+    "diplome",
+    "cin"
+  ],
+  "documents_manquants": [],
+  "documents_illisibles": [],
+  "incoherences": [],
+  "niveau_conformite": "conforme",
+  "score_coherence": 100,
+  "resume": "Aucune incohérence détectée entre le CV, le diplôme et la CIN."
+}
