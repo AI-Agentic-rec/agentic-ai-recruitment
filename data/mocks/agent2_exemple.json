@@ -1,0 +1,51 @@
+{
+  "nom": "Benali",
+  "prenom": "Sara",
+  "email": "sara.benali@exemple-fictif.test",
+  "telephone": "0600000000",
+  "formations": [
+    {
+      "diplome": "Master",
+      "specialite": "Informatique",
+      "etablissement": "Université Fictive de Casablanca",
+      "date_debut": "2019-09",
+      "date_fin": "2021-06"
+    }
+  ],
+  "experiences": [
+    {
+      "poste": "Développeuse Python",
+      "entreprise": "TechFictive",
+      "description": "Développement d'API REST et de scripts d'automatisation",
+      "date_debut": "2021-09",
+      "date_fin": "2024-09",
+      "duree_annees": 3.0,
+      "competences": [
+        "Python",
+        "FastAPI",
+        "SQL"
+      ]
+    }
+  ],
+  "competences": [
+    "Python",
+    "SQL",
+    "FastAPI",
+    "Git",
+    "PostgreSQL"
+  ],
+  "langues": [
+    {
+      "langue": "Français",
+      "niveau": "langue maternelle"
+    },
+    {
+      "langue": "Anglais",
+      "niveau": "B2"
+    }
+  ],
+  "certifications": [
+    "Certification Python PCAP (fictive)"
+  ],
+  "experience_totale_annees": 3.0
+}

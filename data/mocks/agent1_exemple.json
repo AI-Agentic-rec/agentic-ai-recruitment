@@ -1,0 +1,33 @@
+{
+  "titre_poste": "Développeur Python",
+  "diplome_demande": "Bac+5 en informatique",
+  "niveau_diplome_min": 5,
+  "experience_min_annees": 3.0,
+  "competences_obligatoires": [
+    "Python",
+    "SQL",
+    "FastAPI",
+    "Git",
+    "Docker"
+  ],
+  "competences_souhaitees": [
+    "PostgreSQL",
+    "Celery",
+    "AWS"
+  ],
+  "langues": [
+    {
+      "langue": "Français",
+      "niveau": "courant"
+    },
+    {
+      "langue": "Anglais",
+      "niveau": "B2"
+    }
+  ],
+  "missions": [
+    "Développer des API REST",
+    "Maintenir et optimiser la base de données",
+    "Participer aux revues de code"
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "resume": "Sara Benali obtient 85.3/100 pour le poste de Développeur Python. Le profil est adapté : expérience, diplôme et langues conformes, seule la compétence obligatoire Docker manque.",
+  "score_global": 85.3,
+  "points_forts": [
+    "4 compétences obligatoires sur 5 maîtrisées : Python, SQL, FastAPI, Git",
+    "3 ans d'expérience en développement Python, conforme au minimum demandé",
+    "Français et Anglais B2 conformes aux langues demandées",
+    "Master en Informatique conforme au Bac+5 exigé",
+    "Documents (CV, diplôme, CIN) cohérents entre eux"
+  ],
+  "points_manquants": [
+    "Docker (compétence obligatoire) non identifié dans le CV",
+    "Celery et AWS (compétences souhaitées) non identifiés"
+  ],
+  "incoherences": [],
+  "justification_score": [
+    {
+      "critere": "competences_obligatoires",
+      "ponderation": 40.0,
+      "score": 80.0,
+      "justification": "4 compétences obligatoires sur 5 identifiées (Python, SQL, FastAPI, Git) ; Docker est manquant."
+    },
+    {
+      "critere": "experience",
+      "ponderation": 20.0,
+      "score": 100.0,
+      "justification": "3 ans d'expérience pour 3 ans demandés : critère atteint."
+    },
+    {
+      "critere": "diplome_formation",
+      "ponderation": 15.0,
+      "score": 100.0,
+      "justification": "Master en Informatique (Bac+5) conforme au diplôme demandé."
+    },
+    {
+      "critere": "competences_souhaitees",
+      "ponderation": 10.0,
+      "score": 33.3,
+      "justification": "1 compétence souhaitée sur 3 identifiée (PostgreSQL) ; Celery et AWS manquants."
+    },
+    {
+      "critere": "langues",
+      "ponderation": 5.0,
+      "score": 100.0,
+      "justification": "Français et Anglais B2 : conformes aux langues demandées."
+    },
+    {
+      "critere": "coherence_documents",
+      "ponderation": 10.0,
+      "score": 100.0,
+      "justification": "Documents cohérents entre eux (score de cohérence 100)."
+    }
+  ],
+  "conclusion": "Profil globalement adapté. Il serait utile de vérifier le niveau réel sur Docker lors d'un entretien.",
+  "avis_indicatif": "favorable",
+  "decision_finale": "La décision finale appartient au responsable du recrutement."
+}

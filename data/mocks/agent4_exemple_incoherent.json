@@ -1,0 +1,55 @@
+{
+  "score_global": 71.3,
+  "details": [
+    {
+      "critere": "competences_obligatoires",
+      "ponderation": 40.0,
+      "score": 80.0,
+      "justification": "4 compétences obligatoires sur 5 identifiées (Python, SQL, FastAPI, Git) ; Docker est manquant."
+    },
+    {
+      "critere": "experience",
+      "ponderation": 20.0,
+      "score": 100.0,
+      "justification": "3 ans d'expérience pour 3 ans demandés : critère atteint."
+    },
+    {
+      "critere": "diplome_formation",
+      "ponderation": 15.0,
+      "score": 40.0,
+      "justification": "Le diplôme fourni est une Licence (Bac+3) : inférieur au Bac+5 demandé, malgré le Master déclaré dans le CV."
+    },
+    {
+      "critere": "competences_souhaitees",
+      "ponderation": 10.0,
+      "score": 33.3,
+      "justification": "1 compétence souhaitée sur 3 identifiée (PostgreSQL) ; Celery et AWS manquants."
+    },
+    {
+      "critere": "langues",
+      "ponderation": 5.0,
+      "score": 100.0,
+      "justification": "Français et Anglais B2 : conformes aux langues demandées."
+    },
+    {
+      "critere": "coherence_documents",
+      "ponderation": 10.0,
+      "score": 50.0,
+      "justification": "2 incohérences détectées entre les documents (score de cohérence 50)."
+    }
+  ],
+  "competences_correspondantes": [
+    "Python",
+    "SQL",
+    "FastAPI",
+    "Git",
+    "PostgreSQL"
+  ],
+  "competences_manquantes": [
+    "Docker",
+    "Celery",
+    "AWS"
+  ],
+  "diplome_conforme": false,
+  "experience_candidat_annees": 3.0
+}

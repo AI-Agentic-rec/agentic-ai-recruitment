@@ -1,0 +1,46 @@
+{
+  "infos_diplome": {
+    "nom": "Benali",
+    "prenom": "Sara",
+    "diplome": "Licence",
+    "specialite": "Informatique",
+    "etablissement": "Université Ibn Zohr",
+    "date_obtention": "2019"
+  },
+  "infos_cin": {
+    "nom": "Benali",
+    "prenom": "Sarah",
+    "date_naissance": "1998-04-12",
+    "numero_cin": "AB123456"
+  },
+  "documents_analyses": [
+    "cv",
+    "diplome",
+    "cin"
+  ],
+  "documents_manquants": [],
+  "documents_illisibles": [],
+  "incoherences": [
+    {
+      "type": "identite",
+      "description": "Le prénom est « Sara » sur le CV mais « Sarah » sur la CIN.",
+      "gravite": "faible",
+      "documents": [
+        "cv",
+        "cin"
+      ]
+    },
+    {
+      "type": "diplome",
+      "description": "Le CV indique « Master (Informatique) » mais le diplôme fourni est « Licence (Informatique) ».",
+      "gravite": "elevee",
+      "documents": [
+        "cv",
+        "diplome"
+      ]
+    }
+  ],
+  "niveau_conformite": "non_conforme",
+  "score_coherence": 50,
+  "resume": "2 point(s) à vérifier : Le prénom est « Sara » sur le CV mais « Sarah » sur la CIN. ; Le CV indique « Master (Informatique) » mais le diplôme fourni est « Licence (Informatique) »."
+}
