@@ -40,7 +40,7 @@ Chaque dossier contient un `README.md` qui explique ce qu'on y met et qui en est
 | Membre | Dossiers |
 |---|---|
 | **Oumaima** (cheffe de projet) | `agents/common/`, `agents/agent3_document_verification/`, `data/mocks/`, `docs/contrats/`, `docs/` assemblage du rapport |
-| **Abdo** | `database/`, `docker/`, `docker-compose.yml`, `agents/agent4_matching/`, upload des documents |
+| **Abderrahmane** | `database/`, `docker/`, `docker-compose.yml`, `agents/agent4_matching/`, upload des documents |
 | **Zineb** | `agents/agent1_job_requirement/`, `frontend/src/espace_public/` |
 | **Salah** | `agents/agent2_cv_extraction/`, `frontend/src/espace_candidat/` |
 | **Fatima** | `backend/app/core/`, `backend/orchestrateur/`, `docs/api/`, `agents/agent5_report/` |
