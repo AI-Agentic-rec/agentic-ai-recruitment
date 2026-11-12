@@ -1,0 +1,6 @@
+# Dépendances des agents (Python 3.10 ou plus)
+pydantic>=2.7
+ollama>=0.5
+pytesseract>=0.3.10
+pillow>=10.1
+pytest>=8.0
