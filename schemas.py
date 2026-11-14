@@ -1,0 +1,33 @@
+from app.agents.schemas import (
+    BaseSchema,
+    CRITERES,
+    DetailCritere,
+    ExigencesStructurees,
+    Formation,
+    Experience,
+    InfoCIN,
+    InfoDiplome,
+    Incoherence,
+    Langue,
+    ProfilCandidat,
+    RapportCandidature,
+    ResultatMatching,
+    VerificationDocuments,
+)
+
+__all__ = [
+    "BaseSchema",
+    "CRITERES",
+    "DetailCritere",
+    "ExigencesStructurees",
+    "Formation",
+    "Experience",
+    "InfoCIN",
+    "InfoDiplome",
+    "Incoherence",
+    "Langue",
+    "ProfilCandidat",
+    "RapportCandidature",
+    "ResultatMatching",
+    "VerificationDocuments",
+]

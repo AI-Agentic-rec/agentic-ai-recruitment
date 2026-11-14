@@ -1,3 +1,13 @@
-# Installe tout le projet : python -m pip install -r requirements.txt
--r agents/requirements.txt
--r backend/requirements.txt
+alembic>=1.14,<2
+celery[redis]>=5.4,<6
+fastapi>=0.115,<1
+jinja2>=3.1,<4
+langgraph>=0.2,<1
+psycopg[binary]>=3.2,<4
+pydantic>=2.0,<3
+pydantic-settings>=2.6,<3
+python-dotenv
+python-multipart>=0.0.17,<1
+sqlalchemy>=2.0,<3
+uvicorn[standard]>=0.32,<1
+bcrypt
