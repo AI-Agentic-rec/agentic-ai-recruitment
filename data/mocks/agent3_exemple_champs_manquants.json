@@ -1,0 +1,37 @@
+{
+  "infos_diplome": {
+    "nom": "EL IDRISSI",
+    "prenom": "Hamza",
+    "diplome": "Licence",
+    "specialite": null,
+    "etablissement": null,
+    "date_obtention": null
+  },
+  "infos_cin": {
+    "nom": "EL IDRISSI",
+    "prenom": "Hamza",
+    "date_naissance": "2000-01-25",
+    "date_expiration": "2030-10-19",
+    "numero_cin": null
+  },
+  "documents_analyses": [
+    "cv",
+    "diplome",
+    "cin"
+  ],
+  "documents_manquants": [],
+  "documents_illisibles": [],
+  "incoherences": [
+    {
+      "type": "autre",
+      "description": "Information illisible ou absente sur le diplôme : établissement, date d'obtention. Vérification manuelle recommandée.",
+      "gravite": "moyenne",
+      "documents": [
+        "diplome"
+      ]
+    }
+  ],
+  "niveau_conformite": "partiellement_conforme",
+  "score_coherence": 80,
+  "resume": "1 point(s) à vérifier : Information illisible ou absente sur le diplôme : établissement, date d'obtention. Vérification manuelle recommandée."
+}

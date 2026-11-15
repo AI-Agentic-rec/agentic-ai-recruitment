@@ -172,6 +172,7 @@ class InfosCIN(BaseSchema):
 
     # Format recommandé : AAAA-MM-JJ
     date_naissance: Optional[str] = None
+    date_expiration: Optional[str] = None
 
     # Information sensible : ne pas transmettre inutilement
     # aux Agents 4 et 5, ni inclure dans les rapports.

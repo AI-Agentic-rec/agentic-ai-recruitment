@@ -1,17 +1,18 @@
 {
   "infos_diplome": {
-    "nom": "Benali",
-    "prenom": "Sara",
-    "diplome": "Master",
+    "nom": "AMRANI",
+    "prenom": "Youssef",
+    "diplome": "Licence Informatique",
     "specialite": "Informatique",
-    "etablissement": "Université Ibn Zohr",
-    "date_obtention": "2021"
+    "etablissement": "Universite Ibn Zohr",
+    "date_obtention": "2023"
   },
   "infos_cin": {
-    "nom": "Benali",
-    "prenom": "Sara",
-    "date_naissance": "1998-04-12",
-    "numero_cin": "AB123456"
+    "nom": "AMRANI",
+    "prenom": "Youssef",
+    "date_naissance": "2000-04-12",
+    "date_expiration": "2030-06-15",
+    "numero_cin": null
   },
   "documents_analyses": [
     "cv",

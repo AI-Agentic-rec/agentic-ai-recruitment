@@ -1,33 +1,24 @@
 {
-  "resume": "Sara Benali obtient 71.3/100 pour le poste de Développeur Python. Techniquement le profil est intéressant, mais deux incohérences ont été détectées entre les documents.",
-  "score_global": 71.3,
+  "resume": "Youssef Amrani obtient 74.3/100 pour le poste de Développeur Python. Le profil est solide techniquement, mais le nom diffère entre le diplôme et la CIN, le diplôme (Licence, Bac+3) est inférieur au Bac+5 exigé et Docker manque.",
+  "score_global": 74.3,
   "points_forts": [
     "4 compétences obligatoires sur 5 maîtrisées : Python, SQL, FastAPI, Git",
     "3 ans d'expérience en développement Python, conforme au minimum demandé",
-    "Français et Anglais B2 conformes aux langues demandées"
+    "Français (C1) et Anglais (B2) conformes aux langues demandées"
   ],
   "points_manquants": [
     "Docker (compétence obligatoire) non identifié dans le CV",
-    "Celery et AWS (compétences souhaitées) non identifiés",
-    "Le diplôme fourni (Licence, Bac+3) est inférieur au Bac+5 exigé"
+    "Le diplôme vérifié (Licence, Bac+3) est inférieur au Bac+5 exigé",
+    "Celery et AWS (compétences souhaitées) non identifiés"
   ],
   "incoherences": [
     {
       "type": "identite",
-      "description": "Le prénom est « Sara » sur le CV mais « Sarah » sur la CIN.",
-      "gravite": "faible",
+      "description": "Le nom est « AMRANI ALAMI » sur le diplôme mais « AMRANI » sur la CIN.",
+      "gravite": "moyenne",
       "documents": [
-        "cv",
+        "diplome",
         "cin"
-      ]
-    },
-    {
-      "type": "diplome",
-      "description": "Le CV indique « Master (Informatique) » mais le diplôme fourni est « Licence (Informatique) ».",
-      "gravite": "elevee",
-      "documents": [
-        "cv",
-        "diplome"
       ]
     }
   ],
@@ -36,40 +27,40 @@
       "critere": "competences_obligatoires",
       "ponderation": 40.0,
       "score": 80.0,
-      "justification": "4 compétences obligatoires sur 5 identifiées (Python, SQL, FastAPI, Git) ; Docker est manquant."
+      "justification": "4/5 compétences obligatoires trouvées. Présentes : Python, SQL, FastAPI, Git. Manquantes : Docker."
     },
     {
       "critere": "experience",
       "ponderation": 20.0,
       "score": 100.0,
-      "justification": "3 ans d'expérience pour 3 ans demandés : critère atteint."
+      "justification": "3 an(s) d'expérience pour 3 demandé(s) : critère atteint."
     },
     {
       "critere": "diplome_formation",
       "ponderation": 15.0,
       "score": 40.0,
-      "justification": "Le diplôme fourni est une Licence (Bac+3) : inférieur au Bac+5 demandé, malgré le Master déclaré dans le CV."
+      "justification": "Niveau Bac+3 (diplôme vérifié) pour Bac+5 demandé : inférieur de 2 an(s)."
     },
     {
       "critere": "competences_souhaitees",
       "ponderation": 10.0,
       "score": 33.3,
-      "justification": "1 compétence souhaitée sur 3 identifiée (PostgreSQL) ; Celery et AWS manquants."
+      "justification": "1/3 compétences souhaitées trouvées. Présentes : PostgreSQL. Manquantes : Celery, AWS."
     },
     {
       "critere": "langues",
       "ponderation": 5.0,
       "score": 100.0,
-      "justification": "Français et Anglais B2 : conformes aux langues demandées."
+      "justification": "Français conforme ; Anglais conforme."
     },
     {
       "critere": "coherence_documents",
       "ponderation": 10.0,
-      "score": 50.0,
-      "justification": "2 incohérences détectées entre les documents (score de cohérence 50)."
+      "score": 80.0,
+      "justification": "Vérification des documents : partiellement conforme (1 incohérence(s), score de cohérence 80)."
     }
   ],
-  "conclusion": "Le diplôme déclaré ne correspond pas au diplôme fourni. Une vérification manuelle des documents est recommandée avant toute décision.",
+  "conclusion": "Le nom du titulaire diffère entre le diplôme et la CIN. Une vérification manuelle des documents est recommandée avant toute décision, en plus de l'écart de niveau de diplôme.",
   "avis_indicatif": "a_etudier",
   "decision_finale": "La décision finale appartient au responsable du recrutement."
 }

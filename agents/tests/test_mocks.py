@@ -12,7 +12,7 @@ MOCKS = Path(__file__).resolve().parents[2] / "data" / "mocks"
 
 
 def charger(nom):
-    return json.loads((MOCKS / nom).read_text(encoding="utf-8"))
+    return json.loads((MOCKS / nom).read_text(encoding="utf-8-sig"))
 
 
 def test_agents_1_et_2_respectent_leur_schema():

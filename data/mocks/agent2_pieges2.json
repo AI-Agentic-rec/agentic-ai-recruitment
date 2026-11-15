@@ -1,0 +1,30 @@
+{
+  "nom": "Amrani",
+  "prenom": "Youssef",
+  "email": "youssef.amrani@exemple-fictif.test",
+  "telephone": "0600000000",
+  "formations": [
+    {
+      "diplome": "Licence",
+      "specialite": "Informatique",
+      "etablissement": "Université Ibn Zohr",
+      "date_debut": "2020-09",
+      "date_fin": "2023-06"
+    }
+  ],
+  "experiences": [
+    {
+      "poste": "Développeur",
+      "entreprise": "TechFictive",
+      "description": "Développement et reporting",
+      "date_debut": "2023-09",
+      "date_fin": "2026-09",
+      "duree_annees": 3.0,
+      "competences": ["Hadoop", "Angular", "Power BI", "XGBoost", "Java"]
+    }
+  ],
+  "competences": ["Hadoop", "Angular", "Power BI", "XGBoost", "Java"],
+  "langues": [],
+  "certifications": [],
+  "experience_totale_annees": 3.0
+}

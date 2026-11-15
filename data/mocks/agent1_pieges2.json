@@ -1,0 +1,10 @@
+{
+  "titre_poste": "Data Engineer",
+  "diplome_demande": "Licence",
+  "niveau_diplome_min": 3,
+  "experience_min_annees": 2,
+  "competences_obligatoires": ["Spark", "React", "Tableau", "Scikit-learn"],
+  "competences_souhaitees": ["Kotlin"],
+  "langues": [],
+  "missions": []
+}

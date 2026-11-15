@@ -1,0 +1,12 @@
+{
+  "titre_poste": "Data Engineer",
+  "diplome_demande": "Licence",
+  "niveau_diplome_min": 3,
+  "experience_min_annees": 2,
+  "competences_obligatoires": ["Analyse de données", "Kubernetes", "AWS", "Docker"],
+  "competences_souhaitees": ["PostgreSQL", "Gestion de projet"],
+  "langues": [
+    { "langue": "Anglais", "niveau": "B2" }
+  ],
+  "missions": ["Construire et maintenir des pipelines de données"]
+}

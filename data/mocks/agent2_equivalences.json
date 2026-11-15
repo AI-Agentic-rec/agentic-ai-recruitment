@@ -1,0 +1,39 @@
+{
+  "nom": "Amrani",
+  "prenom": "Youssef",
+  "email": "youssef.amrani@exemple-fictif.test",
+  "telephone": "0600000000",
+  "formations": [
+    {
+      "diplome": "Master", 
+      "specialite": "Informatique",
+      "etablissement": "Université Ibn Zohr",
+      "date_debut": "2018-09",
+      "date_fin": "2023-06"
+    }
+  ],
+  "experiences": [
+    {
+      "poste": "Data Engineer",
+      "entreprise": "TechFictive",
+      "description": "Pipelines de données et déploiement cloud",
+      "date_debut": "2023-09",
+      "date_fin": "2026-09",
+      "duree_annees": 3.0,
+      "competences": ["Python", "Data Analysis", "K8s"]
+    }
+  ],
+  "competences": [
+    "Python",
+    "Data Analysis",
+    "Postgres",
+    "K8s",
+    "Amazon Web Services",
+    "Project Management"
+  ],
+  "langues": [
+    { "langue": "Anglais", "niveau": "B2" }
+  ],
+  "certifications": [],
+  "experience_totale_annees": 3.0
+}
