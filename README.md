@@ -20,13 +20,13 @@ recrutement-agentic-ai/
 │   ├── app/                         routes, sécurité, modèles, services
 │   ├── orchestrateur/               enchaînement des agents
 │   └── tests/
-├── database/                        schéma, migrations, données de départ
+├── database/                        schéma (MCD, UML, SQL), migrations Alembic, données de départ
 ├── frontend/                        espaces public, candidat, administrateur
 ├── data/
 │   ├── mocks/                       exemples de sorties des 5 agents (JSON)
 │   └── jeu_de_test/                 offres et candidats fictifs
 ├── docs/                            architecture, contrats, UML, API, planning
-├── docker/                          Dockerfiles (docker-compose.yml à la racine)
+├── docker/                          Dockerfiles (docker-compose.yml, alembic.ini et .env.example à la racine)
 ├── scripts/                         scripts utiles à l'équipe
 ├── tests/                           tests de bout en bout
 ├── .github/                         tests automatiques et modèle de pull request
@@ -58,12 +58,23 @@ Si ton travail touche le dossier de quelqu'un d'autre, passe par une pull reques
 
 ## Prérequis
 
-- Python 3.10 ou plus, Git
+- Python 3.11 ou plus, Git
 - [Ollama](https://ollama.com/download) (modèles locaux)
 - [Tesseract](https://github.com/UB-Mannheim/tesseract/wiki) avec le pack de langue **français** (OCR de l'agent 3)
 - Docker et Docker Compose
 
-## Installation (Windows, PowerShell)
+## Démarrage rapide avec Docker (PostgreSQL + API + Redis + worker)
+
+```bash
+cp .env.example .env            # Windows : copy .env.example .env   puis choisir POSTGRES_PASSWORD
+docker compose up --build       # les tables sont créées automatiquement (service `migrate`)
+docker compose run --rm seed    # compte admin, compte candidat, offre de test (à lancer une fois)
+```
+
+API et documentation interactive : <http://localhost:8000/docs> (test rapide : `GET /offers`).
+Détails, commandes utiles et description des services : `docker/README.md`. Base de données : `database/README.md`.
+
+## Installation sans Docker (Windows, PowerShell)
 
 ```powershell
 git clone <URL-DU-DEPOT>
@@ -72,6 +83,9 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 copy .env.example .env
+docker compose up -d postgres redis      # ou une installation locale de PostgreSQL
+alembic upgrade head
+uvicorn app.main:app --app-dir backend --reload
 ```
 
 Modèles locaux :
@@ -88,7 +102,8 @@ Depuis la racine du dépôt :
 python -m pytest -q
 ```
 
-Aucun test n'appelle Ollama : les modèles y sont simulés.
+Aucun test n'appelle Ollama : les modèles y sont simulés. Les tests du backend ont besoin d'un PostgreSQL
+(`docker compose up -d postgres`) ; sans lui, ils sont ignorés (voir `backend/README.md`).
 
 ## Règles du projet
 
