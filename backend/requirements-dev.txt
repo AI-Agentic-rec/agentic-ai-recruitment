@@ -1,0 +1,4 @@
+# Dépendances des tests (en plus de requirements.txt) : python -m pip install -r backend/requirements-dev.txt
+pytest>=8
+httpx>=0.27
+httpx2  # exigé par certaines versions de Starlette pour fastapi.testclient

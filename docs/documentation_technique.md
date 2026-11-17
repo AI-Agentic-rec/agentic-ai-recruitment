@@ -133,8 +133,10 @@ Les variables `REDIS_URL`, `CELERY_BROKER_URL` et `CELERY_RESULT_BACKEND` sont f
 ### 5.1 L'image `docker/backend.Dockerfile`
 
 Une seule image sert quatre services (`api`, `worker`, `migrate`, `seed`). Elle part de `python:3.12-slim`,
-installe `requirements.txt` (backend + agents) dans une couche mise en cache, copie le dépôt dans `/app`
-et définit `PYTHONPATH=/app:/app/backend`. Contexte de build : **la racine du dépôt**.
+installe `backend/requirements.txt` (FastAPI, SQLAlchemy, Alembic, psycopg, bcrypt, Celery) dans une couche mise en cache,
+puis copie le dépôt dans `/app` (`app/`, `agents/`, `database/`, `alembic.ini`). `psycopg[binary]` n'exige ni `libpq` ni `gcc`.
+Les dépendances des agents d'IA (Ollama, OCR) s'ajoutent avec `--build-arg REQUIREMENTS=requirements.txt`.
+Un fichier `.dockerignore` empêche de copier `.env` et les documents déposés dans l'image. Contexte de build : **la racine du dépôt**.
 
 ```bash
 docker build -f docker/backend.Dockerfile -t recruitment-backend .
@@ -207,33 +209,41 @@ frontal HTTPS, et ne pas lancer `seed` avec les mots de passe d'exemple.
 
 ## 6. Base de données PostgreSQL
 
-Le schéma suit le MCD et le diagramme de classes figés (`database/schema/mcd_merise.jpg`, `diagramme_classes.jpg`).
-Les colonnes sont en anglais dans le code ; les diagrammes sont en français (même sens).
+Le schéma est la traduction **exacte** du diagramme de classes UML v2 (`database/schema/diagramme_classes.jpg`) :
+mêmes noms de tables (nom de la classe en `snake_case`), mêmes attributs, mêmes énumérations, en français.
+Détail de chaque table : [`database/DOCUMENTATION.md`](../database/DOCUMENTATION.md). SQL : `database/schema/schema.sql`.
 
 ```mermaid
 erDiagram
-    users ||--o{ offers : "crée (admin)"
-    users ||--o{ applications : "dépose (candidat)"
-    offers ||--o{ applications : "reçoit"
-    offers ||--o| offer_requirements : "agent 1"
-    applications ||--o{ documents : "contient (1..3)"
-    applications ||--o| extracted_profiles : "agent 2"
-    applications ||--o| document_verifications : "agent 3"
-    applications ||--o| analysis_results : "agents 4 et 5"
+    utilisateur ||--o{ offre : "crée (admin)"
+    utilisateur ||--o{ candidature : "dépose (candidat)"
+    offre ||--o{ candidature : "reçoit"
+    offre ||--o| exigences_structurees : "agent 1"
+    candidature ||--|{ document : "contient (1..3)"
+    candidature ||--o| profil_candidat : "agent 2"
+    candidature ||--o| verification_documents : "agent 3"
+    candidature ||--o| resultat_analyse : "agents 4 et 5"
 ```
 
 | Table | Contenu | Points importants |
 |---|---|---|
-| `users` | Comptes | `email` unique ; rôle `ADMIN` ou `CANDIDATE` ; mot de passe haché (bcrypt) |
-| `offers` | Offres d'emploi | Statut `DRAFT` → `PUBLISHED` → `CLOSED` ; compétences en JSONB ; `creator_id` protégé (`RESTRICT`) |
-| `applications` | Candidatures | Unique `(candidate_id, offer_id)` ; statuts `SUBMITTED`, `PENDING_PROCESSING`, `PROCESSING`, `ANALYSIS_COMPLETED`, `PROCESSING_ERROR` |
-| `documents` | CV, diplôme, CIN | Unique `(application_id, document_type)` ; suppression en cascade |
-| `offer_requirements` | Sortie de l'agent 1 | Une ligne par offre (JSONB) |
-| `extracted_profiles` | Sortie de l'agent 2 | Une ligne par candidature (JSONB) |
-| `document_verifications` | Sortie de l'agent 3 | `cin_info` est sensible : jamais dans les logs ni transmis aux agents 4 et 5 |
-| `analysis_results` | Sortie des agents 4 et 5 | Score, détail des 6 critères, rapport |
+| `utilisateur` | Comptes | `email` unique ; rôle `ADMIN` ou `CANDIDAT` ; mot de passe haché (bcrypt) |
+| `offre` | Offres d'emploi | Statut `BROUILLON` → `PUBLIEE` → `CLOTUREE` ; compétences en JSONB ; `id_admin` protégé (`RESTRICT`) |
+| `candidature` | Candidatures | Unique `(id_candidat, id_offre)` ; statuts `ENVOYEE`, `EN_ATTENTE_DE_TRAITEMENT`, `EN_COURS_DE_TRAITEMENT`, `ANALYSE_TERMINEE`, `ERREUR_DE_TRAITEMENT` |
+| `document` | CV, diplôme, CIN | Unique `(id_candidature, type)` donc 1 à 3 par candidature ; suppression en cascade |
+| `exigences_structurees` | Sortie de l'agent 1 | Clé primaire `id_offre` (0..1 par offre) |
+| `profil_candidat` | Sortie de l'agent 2 | Clé primaire `id_candidature` ; formations, expériences, langues en JSONB |
+| `verification_documents` | Sortie de l'agent 3 | `infos_cin` est sensible : numéro masqué, jamais dans les logs ni transmis aux agents 4 et 5 |
+| `resultat_analyse` | Sortie des agents 4 et 5 | Score, `details` (les 6 critères), `rapport`, `avis_indicatif` |
 
 Supprimer une offre supprime ses candidatures, puis leurs documents et résultats (`ON DELETE CASCADE`).
+
+### Enregistrement des résultats des agents (4 tables)
+
+`app/services/enregistrement_resultats.py` valide la sortie de chaque agent avec `agents/common/schemas.py` puis l'écrit
+dans `exigences_structurees`, `profil_candidat`, `verification_documents` et `resultat_analyse` (relancer une analyse remplace
+le résultat précédent). `enregistrer_resultats_candidature()` écrit les 3 tables d'une candidature en une transaction et passe
+son statut à `ANALYSE_TERMINEE` ; `enregistrer_erreur_traitement()` passe à `ERREUR_DE_TRAITEMENT` avec `message_erreur`.
 
 ### Migrations (Alembic)
 
@@ -246,7 +256,7 @@ alembic check                                      # modèles et migrations sont
 alembic revision --autogenerate -m "ajoute X"      # après avoir modifié un modèle
 ```
 
-Workflow pour modifier une table : 1) modifier le modèle dans `backend/app/models/`, 2) générer la migration,
+Workflow pour modifier une table : 1) modifier le modèle dans `app/models/`, 2) générer la migration,
 3) **relire** le fichier généré (types, valeurs par défaut, enums), 4) `alembic upgrade head`, 5) `alembic check`,
 6) committer modèle et migration ensemble. Ne jamais modifier une migration déjà fusionnée dans `main` ; en créer une nouvelle.
 N'utilise pas `Base.metadata.create_all()` : il créerait des tables en dehors d'Alembic.

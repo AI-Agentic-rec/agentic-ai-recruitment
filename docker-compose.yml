@@ -1,5 +1,6 @@
 # Whole stack:  cp .env.example .env  &&  docker compose up --build
 # API docs: http://localhost:8000/docs      Seed data: docker compose run --rm seed
+# Base : 8 tables du diagramme de classes UML v2 (voir database/DOCUMENTATION.md), créées par `migrate`.
 #
 # Start-up order:  postgres + redis (healthy)  ->  migrate (alembic upgrade head, runs once)  ->  api + worker
 
@@ -55,7 +56,9 @@ services:
       timeout: 5s
       retries: 10
 
-  # One-shot job: creates / upgrades the tables, then exits. api and worker wait for it to succeed.
+  # One-shot job: creates / upgrades the 8 tables (utilisateur, offre, candidature, document,
+  # exigences_structurees, profil_candidat, verification_documents, resultat_analyse), then exits.
+  # api and worker wait for it to succeed.
   migrate:
     <<: *backend
     container_name: recruitment_migrate
