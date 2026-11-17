@@ -12,3 +12,5 @@
 Utilisateur, Offre, Candidature, Document, Exigences structurées, Profil extrait, Vérification documents, Résultat d'analyse.
 
 Aucun mot de passe en clair, aucune vraie donnée.
+
+Documentation détaillée (rôle de chaque table, attributs, relations) : [`DOCUMENTATION.md`](DOCUMENTATION.md).

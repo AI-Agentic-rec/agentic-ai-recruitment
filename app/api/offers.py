@@ -2,12 +2,12 @@ from collections.abc import Generator
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
-from sqlalchemy.sql import func
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 
 from app.db.session import SessionLocal
-from app.models import Offer, OfferStatus, User
-from app.schemas.offer import OfferCreate, OfferRead, OfferUpdate
+from app.models import Offre, RoleUtilisateur, StatutOffre, Utilisateur
+from app.schemas.offer import OffreCreate, OffreRead, OffreUpdate
 
 router = APIRouter(prefix="/offers", tags=["offers"])
 
@@ -17,95 +17,88 @@ def get_db() -> Generator[Session, None, None]:
         yield db
 
 
-def get_offer_or_404(offer_id: int, db: Session) -> Offer:
-    offer = db.get(Offer, offer_id)
-    if offer is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offer not found")
-    return offer
+def get_offre_or_404(offre_id: int, db: Session) -> Offre:
+    offre = db.get(Offre, offre_id)
+    if offre is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Offre introuvable")
+    return offre
 
 
-@router.post("", response_model=OfferRead, status_code=status.HTTP_201_CREATED)
-def create_offer(payload: OfferCreate, db: Session = Depends(get_db)) -> Offer:
-    creator = db.get(User, payload.creator_id)
-    if creator is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Creator not found")
+def exiger_statut(offre: Offre, attendu: StatutOffre, action: str) -> None:
+    if offre.statut is not attendu:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Seule une offre au statut {attendu.value} peut être {action}",
+        )
 
-    offer = Offer(**payload.model_dump())
-    db.add(offer)
+
+@router.post("", response_model=OffreRead, status_code=status.HTTP_201_CREATED)
+def creer_offre(payload: OffreCreate, db: Session = Depends(get_db)) -> Offre:
+    admin = db.get(Utilisateur, payload.id_admin)
+    if admin is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Administrateur introuvable")
+    if admin.role is not RoleUtilisateur.ADMIN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Seul un administrateur crée une offre")
+
+    offre = Offre(**payload.model_dump())
+    db.add(offre)
     db.commit()
-    db.refresh(offer)
-    return offer
+    db.refresh(offre)
+    return offre
 
 
-@router.get("", response_model=list[OfferRead])
-def list_offers(
-    status_filter: OfferStatus | None = Query(default=None, alias="status"),
+@router.get("", response_model=list[OffreRead])
+def lister_offres(
+    statut: StatutOffre | None = Query(default=None),
     db: Session = Depends(get_db),
-) -> list[Offer]:
-    query = select(Offer).order_by(Offer.created_at.desc())
-    if status_filter is not None:
-        query = query.where(Offer.status == status_filter)
-    return list(db.scalars(query).all())
+) -> list[Offre]:
+    requete = select(Offre).order_by(Offre.date_creation.desc())
+    if statut is not None:
+        requete = requete.where(Offre.statut == statut)
+    return list(db.scalars(requete).all())
 
 
-@router.get("/{offer_id}", response_model=OfferRead)
-def read_offer(offer_id: int, db: Session = Depends(get_db)) -> Offer:
-    return get_offer_or_404(offer_id, db)
+@router.get("/{offre_id}", response_model=OffreRead)
+def lire_offre(offre_id: int, db: Session = Depends(get_db)) -> Offre:
+    return get_offre_or_404(offre_id, db)
 
 
-@router.patch("/{offer_id}", response_model=OfferRead)
-def update_offer(offer_id: int, payload: OfferUpdate, db: Session = Depends(get_db)) -> Offer:
-    offer = get_offer_or_404(offer_id, db)
-    if offer.status is not OfferStatus.DRAFT:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Only draft offers can be edited",
-        )
-
-    for field, value in payload.model_dump(exclude_unset=True).items():
-        setattr(offer, field, value)
+@router.patch("/{offre_id}", response_model=OffreRead)
+def modifier_offre(offre_id: int, payload: OffreUpdate, db: Session = Depends(get_db)) -> Offre:
+    offre = get_offre_or_404(offre_id, db)
+    exiger_statut(offre, StatutOffre.BROUILLON, "modifiée")
+    for champ, valeur in payload.model_dump(exclude_unset=True).items():
+        setattr(offre, champ, valeur)
     db.commit()
-    db.refresh(offer)
-    return offer
+    db.refresh(offre)
+    return offre
 
 
-@router.post("/{offer_id}/publish", response_model=OfferRead)
-def publish_offer(offer_id: int, db: Session = Depends(get_db)) -> Offer:
-    offer = get_offer_or_404(offer_id, db)
-    if offer.status is not OfferStatus.DRAFT:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Only draft offers can be published",
-        )
-    offer.status = OfferStatus.PUBLISHED
-    offer.published_at = db.scalar(select(func.now()))
+@router.post("/{offre_id}/publish", response_model=OffreRead)
+def publier_offre(offre_id: int, db: Session = Depends(get_db)) -> Offre:
+    offre = get_offre_or_404(offre_id, db)
+    exiger_statut(offre, StatutOffre.BROUILLON, "publiée")
+    offre.statut = StatutOffre.PUBLIEE
+    offre.date_publication = db.scalar(select(func.now()))
     db.commit()
-    db.refresh(offer)
-    return offer
+    db.refresh(offre)
+    return offre
 
 
-@router.post("/{offer_id}/close", response_model=OfferRead)
-def close_offer(offer_id: int, db: Session = Depends(get_db)) -> Offer:
-    offer = get_offer_or_404(offer_id, db)
-    if offer.status is not OfferStatus.PUBLISHED:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Only published offers can be closed",
-        )
-    offer.status = OfferStatus.CLOSED
-    offer.closed_at = db.scalar(select(func.now()))
+@router.post("/{offre_id}/close", response_model=OffreRead)
+def cloturer_offre(offre_id: int, db: Session = Depends(get_db)) -> Offre:
+    offre = get_offre_or_404(offre_id, db)
+    exiger_statut(offre, StatutOffre.PUBLIEE, "clôturée")
+    offre.statut = StatutOffre.CLOTUREE
+    offre.date_cloture = db.scalar(select(func.now()))
     db.commit()
-    db.refresh(offer)
-    return offer
+    db.refresh(offre)
+    return offre
 
 
-@router.delete("/{offer_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_offer(offer_id: int, db: Session = Depends(get_db)) -> None:
-    offer = get_offer_or_404(offer_id, db)
-    if offer.status is not OfferStatus.DRAFT:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Only draft offers can be deleted",
-        )
-    db.delete(offer)
+@router.delete("/{offre_id}", status_code=status.HTTP_204_NO_CONTENT)
+def supprimer_offre(offre_id: int, db: Session = Depends(get_db)) -> None:
+    offre = get_offre_or_404(offre_id, db)
+    exiger_statut(offre, StatutOffre.BROUILLON, "supprimée")
+    db.delete(offre)
     db.commit()

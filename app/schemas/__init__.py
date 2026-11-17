@@ -1,3 +1,3 @@
-from app.schemas.offer import OfferCreate, OfferRead, OfferUpdate
+from app.schemas.offer import OffreCreate, OffreRead, OffreUpdate
 
-__all__ = ["OfferCreate", "OfferRead", "OfferUpdate"]
+__all__ = ["OffreCreate", "OffreRead", "OffreUpdate"]

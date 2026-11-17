@@ -1,0 +1,10 @@
+{
+  "titre_poste": "Data Engineer",
+  "diplome_demande": "Licence",
+  "niveau_diplome_min": 3,
+  "experience_min_annees": 2,
+  "competences_obligatoires": ["React", "Apache Spark", "Node.js", "Tableau Software"],
+  "competences_souhaitees": ["Apache Kafka"],
+  "langues": [],
+  "missions": []
+}

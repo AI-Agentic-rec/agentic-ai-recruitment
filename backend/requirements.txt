@@ -1,1 +1,13 @@
-# Dépendances du backend : à compléter par l'équipe backend 
+# Dépendances du backend (API, base de données, tâches asynchrones)
+fastapi>=0.110
+uvicorn[standard]>=0.29
+sqlalchemy>=2.0
+alembic>=1.13
+psycopg[binary]>=3.1
+pydantic>=2.7
+pydantic-settings>=2.2
+python-dotenv>=1.0
+bcrypt>=4.1
+celery>=5.3
+redis>=5.0
+packaging>=23.0
