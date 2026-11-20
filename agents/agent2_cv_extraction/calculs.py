@@ -41,12 +41,11 @@ def intervalle_mois(date_debut, date_fin, aujourdhui: date | None = None):
         return None
     debut = d[0] * 12 + ((d[1] - 1) if d[1] else 6)
     if date_fin in (None, ""):
-        fin = aujourdhui.year * 12 + aujourdhui.month               # poste actuel : mois courant inclus
+        fin = aujourdhui.year * 12 + aujourdhui.month               
     else:
         f = parse_date(date_fin)
         if f is None:
             return None
-        # Convention [début, fin[ : le mois de fin n'est pas inclus.
         fin = f[0] * 12 + ((f[1] - 1) if f[1] else 6)
     return (debut, fin) if fin > debut else None
 
