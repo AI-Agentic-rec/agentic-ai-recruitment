@@ -1,0 +1,15 @@
+{
+    "candidat_id": 1,
+    "nom_diplome": "AMRANI",
+    "nom_cin": "AMRANI",
+    "prenom": "Youssef",
+    "date_naissance": "12/04/2000",
+    "diplome": "Licence Informatique",
+    "etablissement": "Universite Ibn Zohr",
+    "annee_obtention": "2023",
+    "date_expiration_cin": "15/06/2030",
+    "scenario": "Documents fictifs conformes",
+    "niveaux_acceptes": [
+        "conforme"
+    ]
+}

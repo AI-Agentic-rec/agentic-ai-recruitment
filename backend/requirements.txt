@@ -6,8 +6,25 @@ alembic>=1.13
 psycopg[binary]>=3.1
 pydantic>=2.7
 pydantic-settings>=2.2
+email-validator>=2.0
 python-dotenv>=1.0
 bcrypt>=4.1
+python-multipart>=0.0.9
 celery>=5.3
 redis>=5.0
 packaging>=23.0
+
+# Orchestrateur et agents IA
+langgraph
+langchain
+langchain-community
+ollama
+
+# Traitement des documents
+pdfplumber
+pypdf
+python-docx
+pytesseract
+Pillow
+reportlab
+aiosmtplib

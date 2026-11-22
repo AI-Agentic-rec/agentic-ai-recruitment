@@ -8,6 +8,8 @@ celery_app = Celery(
     "recruitment",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
+    include=["app.tasks"]  # ✅ AJOUTE CETTE LIGNE
+
 )
 celery_app.conf.task_serializer = "json"
 celery_app.conf.result_serializer = "json"
