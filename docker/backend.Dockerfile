@@ -1,7 +1,3 @@
-# Image unique du backend : sert l'API, le worker Celery, `migrate` (Alembic) et `seed`.
-# Construire à la racine du dépôt :  docker build -f docker/backend.Dockerfile -t recruitment-backend .
-# (docker compose le fait tout seul : docker compose up --build)
-
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
