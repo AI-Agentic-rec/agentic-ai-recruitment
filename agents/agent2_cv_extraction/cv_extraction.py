@@ -6,97 +6,107 @@ Sortie : un ProfilCandidat validé par Pydantic.
 import re
 from pathlib import Path
 
-from .calculs import completer_profil
+from pydantic import BaseModel, ConfigDict, Field
+
+from .calculs import MOIS, completer_profil
 from .lecture_documents import lire_cv
 from agents.common.llm_local import executer_agent
-from agents.common.schemas import ProfilCandidat
+from agents.common.schemas import Experience, Formation, ProfilCandidat
 
 
 SYSTEM = """Tu es le CV Extraction Agent d'une plateforme de recrutement.
 
-Ta seule tâche : extraire fidèlement les informations d'un CV et les structurer.
+Ta tâche : extraire fidèlement les informations d'un CV et les structurer selon le schéma JSON demandé.
+Inclus toujours toutes les clés attendues du schéma, y compris "formations" et "experiences".
 
-Règles :
+Règles générales :
 - Réponds UNIQUEMENT avec un objet JSON valide.
 - N'invente rien et ne déduis rien.
 - Information absente = null (champ simple) ou [] (liste).
 - "nom" = nom de famille ; "prenom" = prénom.
 - "email" et "telephone" tels qu'écrits.
 
-- "formations" : une entrée par diplôme.
-  « diplome » = TYPE de diplôme seulement, parmi :
-    Licence, Master, Doctorat, Ingénieur d'État, DUT, BTS,
-    Bachelor, Baccalauréat, DEUG.
-  « specialite » = le domaine d'études
-    (Informatique, Gestion, Mathématiques, Data Science,
-    Finance, Économie, Physique, etc.).
-  « etablissement » = l'université ou l'école.
+- "formations" : OBLIGATOIRE dès qu'une formation ou un diplôme figure dans le CV (même si la mise en page est sur plusieurs lignes ou utilise des séparateurs comme '|').
+  Chaque élément est un objet avec :
+  - "diplome" : intitulé / type de diplôme (ex. "Master en Génie Logiciel", "Licence en Informatique", "Master", "Licence", "Ingénieur d'État", "DUT", "BTS", "Bachelor", "Baccalauréat").
+  - "specialite" : domaine d'études si précisé (ex. "Génie Logiciel", "Informatique", "Data Science"), sinon null.
+  - "etablissement" : nom de l'école ou de l'université, sinon null.
+  - "date_debut" : début si indiqué (AAAA ou AAAA-MM), sinon null.
+  - "date_fin" : année ou mois/année de fin si indiqué (AAAA ou AAAA-MM), sinon null.
 
-  ATTENTION aux dates de FORMATION :
-  « date_fin » = année d'obtention du diplôme
-    (c'est la date qui est écrite sur le CV, souvent
-    entre parenthèses après le nom du diplôme).
-  « date_debut » = début des études, RAREMENT écrit
-    sur un CV. Dans 95% des cas, date_debut = null.
+- "experiences" : OBLIGATOIRE dès qu'une expérience professionnelle ou un stage figure dans le CV.
+  Chaque élément est un objet avec :
+  - "poste" : intitulé du poste ou du stage.
+  - "entreprise" : nom de l'entreprise ou de l'organisation, sinon null.
+  - "description" : résumé court (1 à 2 phrases) des missions réalisées, sinon null.
+  - "date_debut" : date de début (AAAA-MM ou AAAA), sinon null.
+  - "date_fin" : date de fin (AAAA-MM ou AAAA). Si le poste est en cours ("Présent", "Aujourd'hui", "En cours"), mettre null.
+  - "duree_annees" : null (calculé automatiquement ensuite).
+  - "competences" : liste des compétences techniques liées à cette expérience (sinon []).
 
+- DATES : format "AAAA-MM" quand le mois est connu, sinon "AAAA".
   Exemples :
-    « Licence en Informatique, Université Ibn Zohr (2023) »
-      → diplome="Licence", specialite="Informatique",
-        etablissement="Université Ibn Zohr",
-        date_debut=null, date_fin="2023"
-    « Master Data Science, Université Hassan II (2025) »
-      → diplome="Master", specialite="Data Science",
-        etablissement="Université Hassan II",
-        date_debut=null, date_fin="2025"
-    « Licence » (seul)
-      → diplome="Licence", specialite=null,
-        date_debut=null, date_fin=null
+  - « septembre 2023 » / « sept. 2023 » / « 09/2023 » → "2023-09"
+  - « janv. 2023 » → "2023-01"
+  - « févr. 2022 » → "2022-02"
+  - « déc. 2022 » → "2022-12"
+  - « 2020 – 2022 » → date_debut="2020", date_fin="2022"
 
-- "experiences" : une entrée par poste ou stage :
-  poste, entreprise, description (UNE phrase courte),
-  date_debut, date_fin, competences.
+- "competences" : extrais toutes les compétences listées dans le CV (sections dédiées et expériences), sans doublons.
 
-  ATTENTION aux dates d'EXPÉRIENCE :
-  « date_debut » = date de début du poste (la première).
-  « date_fin » = date de fin du poste (la deuxième).
-  Si le CV écrit « 2023-09 - 2026-09 », alors
-    date_debut="2023-09" ET date_fin="2026-09".
-  Si le CV écrit « 2023-09 - présent » ou
-    « 2023-09 - aujourd'hui », alors date_fin=null.
-  Ne renvoie JAMAIS date_fin=null si une date de fin
-    explicite est écrite dans le CV.
+- "langues" : liste d'objets {"langue": "...", "niveau": ...}. Le niveau est recopié uniquement s'il est écrit, sinon null.
 
-- DATES : format AAAA-MM obligatoire.
-  « septembre 2023 » → "2023-09"
-  « sept. 2023 » → "2023-09"
-  « 09/2023 » → "2023-09"
-  « mars 2021 » → "2021-03"
-  « 03/2021 » → "2021-03"
-  Si seule l'année est écrite : "AAAA" (ex. "2023").
-
-- "duree_annees" de chaque expérience = null.
-- "experience_totale_annees" = 0.
-  Le programme calcule ces valeurs lui-même.
-
-- "competences" : EXTRAIS OBLIGATOIREMENT toutes les
-  compétences listées dans le CV, y compris :
-  * celles de la section « Compétences » du CV
-    (liste dédiée, souvent en fin de CV)
-  * celles mentionnées dans les expériences
-  Si le CV contient une section « Compétences » (ou
-  « COMPÉTENCES », « Skills », « Technical Skills »),
-  tu DOIS la lire et l'extraire. Ne renvoie JAMAIS []
-  quand cette section existe et contient au moins un terme.
-  Termes courts et normalisés, sans doublons.
-
-- "langues" : objets {"langue": "...", "niveau": null}.
-  Le niveau est recopié uniquement s'il est écrit.
-
-- "certifications" : certificats et attestations hors diplômes
-  universitaires.
-
-Respecte exactement le schéma Pydantic fourni.
+- "certifications" : liste des certificats ou attestations hors diplômes académiques.
 """
+
+
+class _ExtractionFormations(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    formations: list[Formation] = Field(default_factory=list)
+
+
+class _ExtractionExperiences(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    experiences: list[Experience] = Field(default_factory=list)
+
+
+_SYSTEM_FORMATIONS = """Extrais uniquement la liste des formations et diplômes présents dans le texte du CV.
+Réponds UNIQUEMENT avec un JSON valide respectant le schéma demandé.
+Pour chaque diplôme, renseigne "diplome" (ex. "Master en Génie Logiciel", "Licence en Informatique"),
+"specialite", "etablissement", "date_debut" (AAAA ou AAAA-MM ou null) et "date_fin" (AAAA ou AAAA-MM ou null).
+N'invente rien."""
+
+
+_SYSTEM_EXPERIENCES = """Extrais uniquement la liste des expériences professionnelles et stages présents dans le texte du CV.
+Réponds UNIQUEMENT avec un JSON valide respectant le schéma demandé.
+Pour chaque expérience, renseigne "poste", "entreprise", "description" (courte),
+"date_debut" (AAAA-MM ou AAAA ou null), "date_fin" (AAAA-MM ou AAAA ou null si poste actuel / "Présent"),
+"duree_annees": null et "competences" (liste de chaînes).
+N'invente rien."""
+
+
+_NOMS_MOIS_PATTERN = "|".join(
+    sorted((re.escape(k) for k in MOIS.keys()), key=len, reverse=True)
+)
+_BORNE_DATE_PATTERN = rf"(?:(?:19|20)\d{{2}}(?:[-/.]\d{{1,2}})?|\b\d{{1,2}}[-/.](?:19|20)\d{{2}}\b|\b(?:{_NOMS_MOIS_PATTERN})\.?\s+(?:19|20)\d{{2}}\b)"
+
+
+def _normaliser_borne_vers_iso(borne: str) -> str | None:
+    """Convertit une borne extraite du texte brut en AAAA-MM ou AAAA si possible."""
+    t = borne.strip().lower()
+    m = re.search(r"((?:19|20)\d{2})[-/.](\d{1,2})", t)
+    if m and 1 <= int(m.group(2)) <= 12:
+        return f"{m.group(1)}-{int(m.group(2)):02d}"
+    m = re.search(r"\b(\d{1,2})[-/.]((?:19|20)\d{2})\b", t)
+    if m and 1 <= int(m.group(1)) <= 12:
+        return f"{m.group(2)}-{int(m.group(1)):02d}"
+    a = re.search(r"(?:19|20)\d{2}", t)
+    if not a:
+        return None
+    for nom, num in MOIS.items():
+        if re.search(rf"\b{re.escape(nom)}\b", t):
+            return f"{a.group(0)}-{num:02d}"
+    return a.group(0)
 
 
 # =============================================================================
@@ -107,26 +117,63 @@ def _corriger_dates_experiences(profil: ProfilCandidat, texte_cv: str) -> Profil
     """
     Corrige date_fin des expériences à partir du texte brut du CV.
     Le LLM met parfois date_fin=null quand une date explicite existe
-    (ex. « 2023-09 - 2026-09 »). On relit le texte pour la retrouver.
+    (ex. « 2023-09 - 2026-09 » ou « Sept. 2022 – Déc. 2022 »).
     """
-    # Motif : "AAAA-MM - AAAA-MM" ou "AAAA - AAAA" ou "AAAA-MM à AAAA-MM"
     motif = re.compile(
-        r"((?:19|20)\d{2}(?:-\d{2})?)\s*[-–à]+\s*((?:19|20)\d{2}(?:-\d{2})?)"
+        rf"({_BORNE_DATE_PATTERN})\s*(?:[-–—]+|\bà\b|\bau\b)\s*({_BORNE_DATE_PATTERN})",
+        flags=re.IGNORECASE,
     )
-    paires = motif.findall(texte_cv)
+    paires_norm = []
+    for debut_raw, fin_raw in motif.findall(texte_cv):
+        d_norm = _normaliser_borne_vers_iso(debut_raw)
+        f_norm = _normaliser_borne_vers_iso(fin_raw)
+        if d_norm and f_norm:
+            paires_norm.append((d_norm, f_norm))
 
     for exp in profil.experiences:
         if exp.date_fin is not None:
-            continue  # déjà rempli, on ne touche pas
+            continue
         if not exp.date_debut:
             continue
 
-        # Cherche la paire qui correspond au date_debut de l'expérience
-        debut_exp = str(exp.date_debut).strip()
-        for debut, fin in paires:
-            if debut.strip() == debut_exp:
-                exp.date_fin = fin.strip()
+        debut_exp = _normaliser_borne_vers_iso(str(exp.date_debut)) or str(exp.date_debut).strip()
+        for debut, fin in paires_norm:
+            if debut == debut_exp or debut.startswith(debut_exp) or debut_exp.startswith(debut):
+                exp.date_fin = fin
                 break
+
+    return profil
+
+
+def _completer_listes_manquantes(profil: ProfilCandidat, texte_cv: str, essais: int) -> ProfilCandidat:
+    """Relance un extraction ciblée si formations ou experiences sont vides alors que le texte en mentionne."""
+    texte_lower = texte_cv.lower()
+
+    if not profil.formations and re.search(
+        r"\b(formation|formations|diplôme|diplome|master|licence|ingénieur|ingenieur|bachelor|dut|bts)\b",
+        texte_lower,
+    ):
+        res_form = executer_agent(
+            numero_agent=2,
+            system_prompt=_SYSTEM_FORMATIONS,
+            message=f"Texte du CV :\n\n{texte_cv}",
+            schema=_ExtractionFormations,
+            max_essais=essais,
+        )
+        profil.formations = res_form.formations
+
+    if not profil.experiences and re.search(
+        r"\b(expériences?|experiences?|expérience professionnelle|experience professionnelle|poste|stage|stagiaire|développeur|developpeur)\b",
+        texte_lower,
+    ):
+        res_exp = executer_agent(
+            numero_agent=2,
+            system_prompt=_SYSTEM_EXPERIENCES,
+            message=f"Texte du CV :\n\n{texte_cv}",
+            schema=_ExtractionExperiences,
+            max_essais=essais,
+        )
+        profil.experiences = res_exp.experiences
 
     return profil
 
@@ -137,26 +184,22 @@ def _corriger_dates_experiences(profil: ProfilCandidat, texte_cv: str) -> Profil
 
 def cv_extraction_agent(
     texte_cv: str,
-    essais: int = 3
+    essais: int = 3,
 ) -> ProfilCandidat:
-
     profil = executer_agent(
         numero_agent=2,
         system_prompt=SYSTEM,
         message=f"Voici le contenu du CV à analyser :\n\n{texte_cv}",
         schema=ProfilCandidat,
-        max_essais=essais
+        max_essais=essais,
     )
 
-    # Post-traitement : le code corrige ce que le LLM n'a pas su faire
+    profil = _completer_listes_manquantes(profil, texte_cv, essais=essais)
     profil = _corriger_dates_experiences(profil, texte_cv)
-
     return completer_profil(profil)
 
 
 def extraire_profil_depuis_fichier(chemin) -> ProfilCandidat:
     """Lit un CV PDF/DOCX puis lance l'Agent 2."""
-
     texte = lire_cv(Path(chemin))
-
     return cv_extraction_agent(texte)
