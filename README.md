@@ -1,121 +1,72 @@
-# Plateforme de recrutement intelligente (Agentic AI)
+# Passerelle - Plateforme de Recrutement Agentic AI
 
-Matching **CV ↔ offre d'emploi** par cinq agents d'IA spécialisés. Mini-projet 2, module Intelligence Artificielle / Agentic AI.
+## Description du projet
+**Passerelle** est une plateforme intelligente de recrutement basée sur une architecture **multi-agents (Agentic AI)**. Elle gère l'intégralité du processus de recrutement : de la publication d'une offre par un recruteur jusqu'à l'analyse automatisée (mais supervisée) des candidatures.
 
-> **Règles centrales** : aucune analyse n'est lancée automatiquement (seul l'administrateur déclenche le traitement). Le score est une **aide à la décision** : la décision finale appartient au recruteur. Toutes les données du projet sont **fictives**.
+La particularité du projet réside dans l'utilisation de **5 agents IA spécialisés** orchestrés par **LangGraph**, capables de lire un CV, de vérifier des documents officiels (CIN, diplôme) via OCR, de comparer un profil aux exigences d'un poste et de générer un rapport explicatif.
 
-## Où mettre quoi
+>  **Règle d'or** : L'IA est une aide à la décision. Aucun traitement n'est lancé automatiquement, et **la décision finale de recrutement appartient toujours à l'humain**.
 
-```
-recrutement-agentic-ai/
-├── agents/                          Les 5 agents d'IA
-│   ├── common/                      contrats (schemas), moteur Ollama, outils partagés
-│   ├── agent1_job_requirement/      analyse de l'offre
-│   ├── agent2_cv_extraction/        extraction du CV
-│   ├── agent3_document_verification/ vérification diplôme et CIN (OCR)
-│   ├── agent4_matching/             score de correspondance
-│   ├── agent5_report/               rapport final
-│   └── tests/                       tests qui concernent plusieurs agents
-├── backend/                         API FastAPI et orchestrateur
-│   ├── app/                         routes, sécurité, modèles, services
-│   ├── orchestrateur/               enchaînement des agents
-│   └── tests/
-├── database/                        schéma (MCD, UML, SQL), migrations Alembic, données de départ
-├── frontend/                        espaces public, candidat, administrateur
-├── data/
-│   ├── mocks/                       exemples de sorties des 5 agents (JSON)
-│   └── jeu_de_test/                 offres et candidats fictifs
-├── docs/                            architecture, contrats, UML, API, planning
-├── docker/                          Dockerfiles (docker-compose.yml, alembic.ini et .env.example à la racine)
-├── scripts/                         scripts utiles à l'équipe
-├── tests/                           tests de bout en bout
-├── .github/                         tests automatiques et modèle de pull request
-└── requirements.txt                 dépendances Python
-```
+---
 
-Chaque dossier contient un `README.md` qui explique ce qu'on y met et qui en est responsable.
+## Fonctionnalités Principales
 
-## Qui travaille où
+### Espace Administrateur (Recruteur)
+*   **Tableau de bord** : Vue d'ensemble des statistiques et Top 3 des meilleurs profils.
+*   **Gestion des offres** : Création, modification, publication et clôture des annonces.
+*   **Gestion des candidatures** : Consultation des dossiers, téléchargement des pièces jointes (CV, CIN, diplôme).
+*   **Traitement IA** : Lancement manuel du workflow (individuel ou par lot).
+*   **Analyse et Décision** : Consultation du score de matching, du rapport détaillé, export PDF du rapport, et envoi d'un email d'acceptation ou de refus au candidat.
 
-| Membre | Dossiers |
-|---|---|
-| **Oumaima** (cheffe de projet) | `agents/common/`, `agents/agent3_document_verification/`, `data/mocks/`,`data/jeu_de_test/ (tests des agents)`, `docs/contrats/`, `docs/` assemblage du rapport |
-| **Abderrahmane** | `database/`, `docker/`, `docker-compose.yml`, `agents/agent4_matching/`, upload des documents |
-| **Zineb** | `agents/agent1_job_requirement/`, `frontend/src/espace_public/` |
-| **Salah** | `agents/agent2_cv_extraction/`, `frontend/src/espace_candidat/` |
-| **Fatima** | `backend/app/core/`, `backend/orchestrateur/`, `docs/api/`, `agents/agent5_report/` |
-| **Amina** | offres, candidatures et emails du backend, `frontend/src/espace_admin/`, `agents/agent5_report/` |
+### Espace Candidat
+*   **Gestion du profil** : Modification des informations personnelles.
+*   **Candidature simplifiée** : Dépôt sécurisé du CV (PDF), du diplôme (Image) et de la CIN (Image).
+*   **Suivi en temps réel** : Consultation du statut d'avancement des candidatures.
+*   **Transparence** : Accès aux résultats partiels (score de correspondance et compétences) une fois l'analyse terminée.
 
-Si ton travail touche le dossier de quelqu'un d'autre, passe par une pull request et demande-lui de relire.
+### Site Public (Visiteur)
+*   Affichage des offres d'emploi publiées.
+*   Système de recherche et de filtres (localisation, expérience, mots-clés).
+*   Consultation détaillée des exigences du poste.
 
-## Conventions
+---
 
-- Noms de dossiers et de fichiers : minuscules, avec des underscores, **sans accents ni espaces**.
-- Fichiers de test : `test_*.py`, avec un **nom unique** dans tout le dépôt.
-- Un agent N a ses fichiers `prompts_agentN.py`, `agentN_prototype.py`, `agentN.py`, `test_agentN*.py`.
-- Imports Python depuis la racine : `from agents.common.schemas import ...`.
-- Aucun fichier de configuration personnel dans Git (`.env`, `.vscode/`).
+##  Stack Technique
 
-## Prérequis
+| Couche | Technologies utilisées |
+| :--- | :--- |
+| **Frontend** | React 19, Vite, React Router, Lucide React, CSS personnalisé |
+| **Backend / API** | Python 3.12, FastAPI, SQLAlchemy 2.0, Alembic |
+| **Base de données** | PostgreSQL 17 |
+| **Tâches asynchrones** | Celery + Redis (gestion de la file d'attente) |
+| **Orchestration IA** | LangGraph, LangChain |
+| **Modèles de langage (LLM)** | Ollama (Mistral 7B) en local |
+| **Lecture de documents** | pdfplumber (PDF), Tesseract OCR (Images CIN/Diplôme) |
+| **Emails** | SMTP (Mailpit pour le dev, Gmail pour la prod) |
+| **Déploiement** | Docker & Docker Compose |
 
-- Python 3.11 ou plus, Git
-- [Ollama](https://ollama.com/download) (modèles locaux)
-- [Tesseract](https://github.com/UB-Mannheim/tesseract/wiki) avec le pack de langue **français** (OCR de l'agent 3)
-- Docker et Docker Compose
+---
 
-## Démarrage rapide avec Docker (PostgreSQL + API + Redis + worker)
+## Architecture des Agents IA
 
-```bash
-cp .env.example .env            # Windows : copy .env.example .env   puis choisir POSTGRES_PASSWORD
-docker compose up --build       # les tables sont créées automatiquement (service `migrate`)
-docker compose run --rm seed    # compte admin, compte candidat, offre de test (à lancer une fois)
-```
+Le workflow est géré par un orchestrateur central (`orchestrator_langgraph.py`) qui respecte les dépendances suivantes :
+1.  **Agent 1 (Job Requirement)** & **Agent 2 (CV Extraction)** s'exécutent **en parallèle**.
+2.  **Agent 3 (Document Verification)** analyse les images et compare avec le profil.
+3.  **Agent 4 (Matching)** calcule un score pondéré (Compétences 40%, Expérience 20%, Diplôme 15%, etc.).
+4.  **Agent 5 (Report)** rédige une synthèse explicative à partir des résultats des 4 premiers agents.
 
-API et documentation interactive : <http://localhost:8000/docs> (test rapide : `GET /offers`).
-Détails, commandes utiles et description des services : `docker/README.md`. Base de données : `database/README.md`.
+---
 
-## Installation sans Docker (Windows, PowerShell)
+## Installation et Lancement
 
-```powershell
-git clone <URL-DU-DEPOT>
-cd <NOM-DU-DEPOT>
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-copy .env.example .env
-docker compose up -d postgres redis      # ou une installation locale de PostgreSQL
-alembic upgrade head
-uvicorn app.main:app --app-dir backend --reload
-```
+### Prérequis
+*   [Docker](https://docs.docker.com/get-docker/) et Docker Compose
+*   [Ollama](https://ollama.com/) installé sur la machine hôte (pour faire tourner Mistral 7B)
+*   *(Optionnel)* Tesseract OCR installé localement (géré automatiquement dans Docker)
 
-Modèles locaux :
+### Étapes de lancement
 
-```powershell
-ollama pull mistral:7b      
-```
-
-## Lancer les tests
-
-Depuis la racine du dépôt :
-
-```powershell
-python -m pytest -q
-```
-
-Aucun test n'appelle Ollama : les modèles y sont simulés. Les tests du backend ont besoin d'un PostgreSQL
-(`docker compose up -d postgres`) ; sans lui, ils sont ignorés (voir `backend/README.md`).
-
-## Règles du projet
-
-1. **Aucune analyse IA sans action explicite de l'administrateur.**
-2. **Données fictives uniquement** pour les CV, diplômes et CIN.
-3. **Aucune clé, aucun mot de passe dans Git** : tout passe par `.env`.
-4. **Sorties JSON validées** (Pydantic) pour chaque agent.
-5. `agents/common/schemas.py` et `data/mocks/` sont les **contrats** : modification seulement après accord de la cheffe de projet.
-6. Le numéro de CIN est une donnée sensible : masqué dans les logs, retiré avant les agents 4 et 5.
-
-## Travailler avec Git
-
-## État d'avancement
-
-À compléter au fil des semaines.
+1. **Cloner le dépôt :**
+   ```bash
+   git clone https://github.com/votre-compte/agentic-ai-recruitment.git
+   cd agentic-ai-recruitment

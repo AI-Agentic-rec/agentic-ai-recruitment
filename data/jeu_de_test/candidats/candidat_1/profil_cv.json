@@ -1,0 +1,12 @@
+{
+    "nom": "AMRANI",
+    "prenom": "Youssef",
+    "formations": [
+        {
+            "diplome": "Licence Informatique",
+            "specialite": null,
+            "etablissement": "Universite Ibn Zohr",
+            "date_fin": "2023"
+        }
+    ]
+}

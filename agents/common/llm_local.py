@@ -17,7 +17,8 @@ class AgentError(Exception):
 MODELES_PAR_DEFAUT_PAR_AGENT = {
     1: "mistral:7b",
     2: "mistral:7b",
-    3: "qwen3-vl:8b-instruct-q4_K_M",
+    3: "mistral:7b",
+    #3: "qwen3-vl:8b-instruct-q4_K_M",
     4: "mistral:7b",
     5: "mistral:7b",
 }

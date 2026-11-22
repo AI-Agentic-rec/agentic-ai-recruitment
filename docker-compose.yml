@@ -12,14 +12,14 @@ x-backend: &backend
     - path: .env
       required: false
   environment: &backend-env
-    # Inside the Docker network the database host is the service name `postgres`, not localhost.
     DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-recruitment_user}:${POSTGRES_PASSWORD:?Copy .env.example to .env and set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-recruitment_db}
     REDIS_URL: redis://redis:6379/0
     CELERY_BROKER_URL: redis://redis:6379/1
     CELERY_RESULT_BACKEND: redis://redis:6379/2
     UPLOAD_DIR: storage/uploads
+    OLLAMA_HOST: http://host.docker.internal:11434
   volumes:
-    - .:/app # development: code changes are picked up without rebuilding
+    - .:/app
     - uploads_data:/app/storage/uploads
 
 services:
@@ -56,9 +56,20 @@ services:
       timeout: 5s
       retries: 10
 
-  # One-shot job: creates / upgrades the 8 tables (utilisateur, offre, candidature, document,
-  # exigences_structurees, profil_candidat, verification_documents, resultat_analyse), then exits.
-  # api and worker wait for it to succeed.
+  # ✅ MAILPIT AVEC PERSISTANCE
+  mailpit:
+    image: axllent/mailpit
+    container_name: recruitment_mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025" # Interface web
+      - "1025:1025" # Port SMTP
+    environment:
+      - MP_DATA_FILE=/data/mailpit.db # ✅ LA LIGNE MAGIQUE QUI SAUVEGARDE SUR LE DISQUE
+    volumes:
+      - mailpit_data:/data # ✅ VOLUME MONTÉ
+
+  # One-shot job: creates / upgrades the 8 tables
   migrate:
     <<: *backend
     container_name: recruitment_migrate
@@ -98,7 +109,6 @@ services:
       redis:
         condition: service_healthy
 
-  # Not started by `docker compose up`. Run it once:  docker compose run --rm seed
   seed:
     <<: *backend
     container_name: recruitment_seed
@@ -113,3 +123,4 @@ volumes:
   postgres_data:
   redis_data:
   uploads_data:
+  mailpit_data: # ✅ DÉCLARATION DU VOLUME
