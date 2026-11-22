@@ -1,6 +1,6 @@
 """
 AGENT 3 : Document Verification
-OCR Tesseract + modèle de vision Qwen3-VL via Ollama.
+OCR Tesseract + extraction structurée par document via Ollama.
 
 Responsabilité unique :
 Vérifier que le diplôme et la CIN sont lisibles, valides et cohérents
@@ -8,13 +8,13 @@ entre eux et avec le CV.
 
 Pipeline :
 1. Lecture des images avec Tesseract.
-2. Envoi du texte OCR ET des images au modèle de vision (extraction).
+2. Extraction séparée du diplôme et de la CIN à partir du texte OCR.
 3. Normalisation déterministe (dates, valeurs vides, erreurs OCR).
 4. Comparaison en Python :
-   - CV <-> diplôme, CV <-> CIN
-   - diplôme <-> CIN
-   - validité de la CIN (expiration)
-   - champs manquants
+  - CV <-> diplôme, CV <-> CIN
+  - diplôme <-> CIN
+  - validité de la CIN (expiration)
+  - champs manquants
 5. Calcul du niveau de conformité et du score.
 
 Sortie : VerificationDocuments, destinée aux agents 4 et 5.
@@ -45,7 +45,9 @@ from agents.common.niveaux_diplome import (
     niveau_diplome as _niveau,
     normaliser as _norm,
 )
-from agents.agent3_document_verification.prompts_agent3 import PROMPT_EXTRACTION
+from agents.agent3_document_verification.prompts_agent3 import (
+    PROMPT_EXTRACTION_DOCUMENT,
+)
 
 
 logger = logging.getLogger("agent3")
@@ -53,9 +55,17 @@ NUMERO_AGENT = 3
 
 
 class ExtractionDocuments(BaseSchema):
-    """Sortie du modèle : uniquement l'extraction. Le reste est calculé par le code."""
+    """Regroupe les informations extraites du diplôme et de la CIN."""
 
     infos_diplome: InfosDiplome
+    infos_cin: InfosCIN
+
+
+class _SeulDiplome(BaseSchema):
+    infos_diplome: InfosDiplome
+
+
+class _SeuleCIN(BaseSchema):
     infos_cin: InfosCIN
 
 
@@ -156,6 +166,7 @@ CHAMPS_CIN = (
 CHAMPS_DIPLOME = (
     ("diplome", "type de diplôme"),
     ("nom", "nom du titulaire"),
+    ("prenom", "prénom du titulaire"),
     ("etablissement", "établissement"),
     ("date_obtention", "date d'obtention"),
 )
@@ -202,9 +213,7 @@ def _croiser_documents(
 ) -> list[Incoherence]:
     """
     Compare directement le diplôme et la CIN.
-    Détecte les cas où les deux documents ne désignent pas la même personne,
-    y compris quand l'un des noms est inclus dans l'autre
-    (ex. « OUAZZANI ALAMI » / « OUAZZANI »).
+    Détecte les cas où les deux documents ne désignent pas la même personne.
     """
     incoherences = []
     if diplome is None or cin is None:
@@ -217,9 +226,9 @@ def _croiser_documents(
 
         ta, tb = _tokens(a), _tokens(b)
         if ta <= tb or tb <= ta:
-            gravite = "moyenne"   # nom composé incomplet sur un document
+            gravite = "moyenne"
         elif _ressemblance(a, b) >= 0.8:
-            gravite = "faible"    # probable erreur OCR
+            gravite = "faible"
         else:
             gravite = "elevee"
 
@@ -308,7 +317,6 @@ def comparer_en_code(
             profil, diplome.nom, diplome.prenom, "diplome", "sur le diplôme"
         )
 
-        # Formation de même niveau dans le CV.
         niv_dip = (
             _niveau(diplome.diplome)
             or _niveau(diplome.diplome, diplome.specialite)
@@ -391,7 +399,6 @@ def comparer_en_code(
                         )
                     )
 
-    # Cohérence directe diplôme <-> CIN.
     incoherences += _croiser_documents(diplome, cin)
 
     return incoherences
@@ -430,36 +437,60 @@ def calculer_conformite(
 
 
 # =============================================================================
-# PIPELINE
+# EXTRACTION ET NORMALISATION
 # =============================================================================
 
 def _normaliser(extraction: ExtractionDocuments) -> ExtractionDocuments:
     """Normalisations déterministes après l'extraction."""
     cin, dip = extraction.infos_cin, extraction.infos_diplome
 
-    # Placeholders  -> None, espaces superflus retirés.
     for infos in (cin, dip):
         for champ in type(infos).model_fields:
             valeur = getattr(infos, champ)
             if isinstance(valeur, str):
                 setattr(infos, champ, _nettoyer(valeur.strip()))
 
-    # Dates au format ISO.
     cin.date_naissance = _iso(cin.date_naissance)
     cin.date_expiration = _iso(cin.date_expiration)
     dip.date_obtention = _iso(dip.date_obtention)
 
-    # Numéro de CIN : sans espaces, en majuscules.
     if cin.numero_cin:
         cin.numero_cin = re.sub(r"\s", "", cin.numero_cin).upper()
 
-    # Erreur OCR classique : « Hassan Il » / « Hassan |l » -> « Hassan II ».
     if dip.etablissement:
         dip.etablissement = re.sub(
             r"(?i)(hassan\s)[Il|][Il|]\b", r"\1II", dip.etablissement
         )
 
     return extraction
+
+
+def _extraire_document_seul(
+    type_doc: str,
+    texte_ocr: Optional[str],
+    schema_cls: type[BaseSchema],
+    llm=None,
+    max_essais: int = 3,
+) -> BaseSchema:
+    """Extrait un seul document (diplôme ou CIN) avec un prompt dédié."""
+    if not texte_ocr or not texte_ocr.strip():
+        cle = "infos_diplome" if schema_cls is _SeulDiplome else "infos_cin"
+        return schema_cls.model_validate({cle: {}})
+
+    message = (
+        f"Type de document : {type_doc}\n\n"
+        f"Texte OCR :\n{texte_ocr}"
+    )
+
+    return executer_agent(
+        NUMERO_AGENT,
+        PROMPT_EXTRACTION_DOCUMENT,
+        message,
+        schema_cls,
+        llm=llm,
+        max_essais=max_essais,
+        images=None,
+    )
 
 
 def _texte_du_document(nom: str, texte, image, ocr, ref: str) -> Optional[str]:
@@ -524,48 +555,36 @@ def verifier_documents(
         if t is not None and not t.strip()
     ]
 
-    # Étape 2 : extraction par le modèle (texte OCR + images).
+    extraction = ExtractionDocuments(
+        infos_diplome=InfosDiplome(),
+        infos_cin=InfosCIN(),
+    )
+
+    # Étape 2 : extraction séparée diplôme et CIN.
     if len(manquants) + len(illisibles) < 2:
-        a_envoyer = {
-            d: (t if t and t.strip() else "(document non fourni)")
-            for d, t in textes.items()
-        }
-
-        images = []
-        if image_diplome and Path(image_diplome).is_file():
-            images.append(image_diplome)
-        if image_cin and Path(image_cin).is_file():
-            images.append(image_cin)
-
-        message = (
-            "Tu dois extraire les informations du diplôme et de la CIN.\n"
-            "Les images jointes sont, dans l'ordre, le diplôme puis la CIN "
-            "(si elles sont présentes).\n"
-            "Utilise les textes OCR et les images pour vérifier la lecture. "
-            "N'invente jamais une information absente ou illisible. "
-            "Si une information n'est pas visible ou vaut « NON RENSEIGNE », "
-            "retourne null.\n\n"
-            f"TEXTE OCR DU DIPLÔME :\n{a_envoyer['diplome']}\n\n"
-            f"TEXTE OCR DE LA CIN :\n{a_envoyer['cin']}"
-        )
-
-        extraction = executer_agent(
-            NUMERO_AGENT,
-            PROMPT_EXTRACTION,
-            message,
-            ExtractionDocuments,
+        res_dip = _extraire_document_seul(
+            "diplôme",
+            textes["diplome"],
+            _SeulDiplome,
             llm=llm,
             max_essais=max_essais,
-            images=images or None,
         )
-        extraction = _normaliser(extraction)
-    else:
-        extraction = ExtractionDocuments(
-            infos_diplome=InfosDiplome(),
-            infos_cin=InfosCIN(),
+        res_cin = _extraire_document_seul(
+            "CIN",
+            textes["cin"],
+            _SeuleCIN,
+            llm=llm,
+            max_essais=max_essais,
         )
 
-    # Étape 3 : ignorer les infos produites pour un document absent/illisible.
+        # Étape 3 : normalisation déterministe.
+        extraction = _normaliser(
+            ExtractionDocuments(
+                infos_diplome=res_dip.infos_diplome,
+                infos_cin=res_cin.infos_cin,
+            )
+        )
+
     infos = {
         "diplome": extraction.infos_diplome,
         "cin": extraction.infos_cin,
